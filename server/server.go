@@ -9,21 +9,27 @@ import (
 	"log"
 	"math"
 	"net/http"
+	"os"
 	"time"
 )
 
-//go:embed keys/Private.pem
 var PrivateKey string
 
 func Run() {
+	// load private key
+
+	pkeys, err := os.ReadFile("../keys/private.pem")
+	if err != nil {
+		log.Fatalf("读取私钥失败: %s", err.Error())
+	}
+	PrivateKey = string(pkeys)
+
 	r := gin.Default()
 
 	initRoute(r)
 
 	log.Println("Server running at 127.0.0.1:8080")
-	err := r.Run("127.0.0.1:8080")
-
-	if err != nil {
+	if err = r.Run("127.0.0.1:8080"); err != nil {
 		log.Fatalf("运行服务器失败: %s", err.Error())
 	}
 }
