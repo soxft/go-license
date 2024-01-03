@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/imroc/biu"
+	"github.com/soxft/go-license/stru"
 	"github.com/wenzhenxi/gorsa"
+	"gorm.io/gorm"
 	"log"
 	"math"
 	"net/http"
@@ -15,21 +17,34 @@ import (
 
 var PrivateKey string
 
-func Run() {
-	// load private key
-
-	pkeys, err := os.ReadFile("../keys/private.pem")
+func loadPrivateKey() {
+	pKeys, err := os.ReadFile("keys/private.pem")
 	if err != nil {
 		log.Fatalf("读取私钥失败: %s", err.Error())
 	}
-	PrivateKey = string(pkeys)
+	PrivateKey = string(pKeys)
+}
 
+var DB *gorm.DB
+
+func loadMysql() {
+
+}
+
+func Run() {
+	// load private key
+	loadPrivateKey()
+
+	// 处理数据库
+	loadMysql()
+
+	// 启动 Web 服务
 	r := gin.Default()
 
 	initRoute(r)
 
 	log.Println("Server running at 127.0.0.1:8080")
-	if err = r.Run("127.0.0.1:8080"); err != nil {
+	if err := r.Run("127.0.0.1:8080"); err != nil {
 		log.Fatalf("运行服务器失败: %s", err.Error())
 	}
 }
@@ -51,7 +66,7 @@ func checkLicense(c *gin.Context) {
 	// 获取完整的请求body
 	rawBody, err := c.GetRawData()
 	if err != nil {
-		c.Data(http.StatusOK, "text/plain", GetEnc(ConnData{
+		c.Data(http.StatusOK, "text/plain", GetEnc(stru.ConnData{
 			Status:    -1,
 			StatusStr: "非法的请求构造, err: body.get.err",
 		}))
@@ -62,16 +77,16 @@ func checkLicense(c *gin.Context) {
 	// decode
 	jData, err := gorsa.PriKeyDecrypt(string(signBytes), PrivateKey)
 	if err != nil {
-		c.Data(http.StatusOK, "text/plain", GetEnc(ConnData{
+		c.Data(http.StatusOK, "text/plain", GetEnc(stru.ConnData{
 			Status:    -1,
 			StatusStr: "非法的请求构造, err: enc.decode.err",
 		}))
 		return
 	}
 
-	var jDataS MachineInfo
+	var jDataS stru.MachineInfo
 	if err := json.Unmarshal([]byte(jData), &jDataS); err != nil {
-		c.Data(http.StatusOK, "text/plain", GetEnc(ConnData{
+		c.Data(http.StatusOK, "text/plain", GetEnc(stru.ConnData{
 			Status:    -1,
 			StatusStr: "非法的请求构造, err: json.decode.err",
 		}))
@@ -80,7 +95,7 @@ func checkLicense(c *gin.Context) {
 
 	// 判断服务器客户端时间 是否大于 一分钟
 	if math.Abs(float64(jDataS.Timestamp-time.Now().Unix())) >= 60 {
-		c.Data(http.StatusOK, "text/plain", GetEnc(ConnData{
+		c.Data(http.StatusOK, "text/plain", GetEnc(stru.ConnData{
 			Status:    -1,
 			StatusStr: "非法的请求构造, err: time.too_large.err",
 		}))
@@ -88,14 +103,14 @@ func checkLicense(c *gin.Context) {
 	}
 
 	// 构造 响应
-	c.Data(http.StatusOK, "text/plain", GetEnc(ConnData{
-		Status:    1,
+	c.Data(http.StatusOK, "text/plain", GetEnc(stru.ConnData{
+		Status:    0,
 		StatusStr: "有效的License",
 	}))
 	return
 }
 
-func GetEnc(cData ConnData) []byte {
+func GetEnc(cData stru.ConnData) []byte {
 	cData.Timestamp = time.Now().Unix()
 
 	jcData, _ := json.Marshal(cData)

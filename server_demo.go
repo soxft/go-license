@@ -1,6 +1,6 @@
 package main
 
-import "go-license/server"
+import "github.com/soxft/go-license/server"
 
 func main() {
 	server.Run()
