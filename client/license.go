@@ -23,19 +23,11 @@ var Exit chan bool
 var licenseServer string
 var PublicKey string
 
-func loadPublicKey() {
-	pKeys, err := os.ReadFile("keys/public.pem")
-	if err != nil {
-		log.Fatalf("读取公钥失败: %s", err.Error())
-	}
-	PublicKey = string(pKeys)
-}
-
-func Run(maxRetries int, interval time.Duration, _licenseServer string) {
+func Run(maxRetries int, interval time.Duration, _licenseServer string, _publicKey string) {
 	Exit = make(chan bool)
 
 	licenseServer = _licenseServer
-	loadPublicKey()
+	PublicKey = _publicKey
 
 	result, err := RunCheck()
 	if err != nil {
