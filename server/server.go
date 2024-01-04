@@ -31,11 +31,13 @@ func loadPrivateKey() {
 var method string
 var serialNumber string
 var dueTime string
+var listen string
 
 func Run() {
 	flag.StringVar(&method, "m", "server", "指定运行模式, `server`: running server, `set` set license due time")
 	flag.StringVar(&serialNumber, "s", "", "指定 serialNumber")
-	flag.StringVar(&dueTime, "d", "指定DueTime", "指定过期时间, ./license -m ser -s xxxxxx -d 2023-12-24")
+	flag.StringVar(&dueTime, "d", "2004-11-23", "指定过期时间, ./license -m ser -s xxxxxx -d 2023-12-24")
+	flag.StringVar(&listen, "l", "127.0.0.1:1111", "指定监听")
 	flag.Parse()
 
 	// 处理数据库
@@ -66,8 +68,8 @@ func Run() {
 
 	initRoute(r)
 
-	log.Println("Server running at 127.0.0.1:8080")
-	if err := r.Run("127.0.0.1:8082"); err != nil {
+	log.Println("Server running at " + listen)
+	if err := r.Run(listen); err != nil {
 		log.Fatalf("运行服务器失败: %s", err.Error())
 	}
 }
