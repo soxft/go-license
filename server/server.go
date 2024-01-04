@@ -3,6 +3,9 @@ package server
 import (
 	_ "embed"
 	"encoding/json"
+	"errors"
+	"flag"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/imroc/biu"
 	"github.com/soxft/go-license/stru"
@@ -25,18 +28,38 @@ func loadPrivateKey() {
 	PrivateKey = string(pKeys)
 }
 
-var DB *gorm.DB
-
-func loadMysql() {
-
-}
+var method string
+var serialNumber string
+var dueTime string
 
 func Run() {
-	// load private key
-	loadPrivateKey()
+	flag.StringVar(&method, "m", "server", "指定运行模式, `server`: running server, `set` set license due time")
+	flag.StringVar(&serialNumber, "s", "", "指定 serialNumber")
+	flag.StringVar(&dueTime, "d", "指定DueTime", "指定过期时间, ./license -m ser -s xxxxxx -d 2023-12-24")
+	flag.Parse()
 
 	// 处理数据库
 	loadMysql()
+
+	if method == "set" {
+
+		date, err := time.Parse("2006-01-02", dueTime)
+		if err != nil {
+			fmt.Println("无法解析日期:", err)
+			return
+		}
+
+		if err = SetLicenseDueTime(serialNumber, date.Unix()); err != nil {
+			log.Printf("[Err] 修改 license 效期失败: %s", err)
+		}
+
+		log.Printf("修改成功 %s -> %s", serialNumber, dueTime)
+
+		return
+	}
+
+	// load private key
+	loadPrivateKey()
 
 	// 启动 Web 服务
 	r := gin.Default()
@@ -44,7 +67,7 @@ func Run() {
 	initRoute(r)
 
 	log.Println("Server running at 127.0.0.1:8080")
-	if err := r.Run("127.0.0.1:8080"); err != nil {
+	if err := r.Run("127.0.0.1:8082"); err != nil {
 		log.Fatalf("运行服务器失败: %s", err.Error())
 	}
 }
@@ -60,6 +83,27 @@ func initRoute(r *gin.Engine) {
 
 	// handler check License
 	r.POST("/check_license", checkLicense)
+}
+
+// SetLicenseDueTime 设置 指定 serial 的过期时间
+func SetLicenseDueTime(serial string, dueTime int64) error {
+	// 先检查是否存在 这个 License
+	var lic License
+	db := D.Model(License{}).Where(License{Serial: serial}).Take(&lic)
+	if errors.Is(db.Error, gorm.ErrRecordNotFound) {
+		// 创建
+		return D.Model(License{}).Create(&License{
+			ID:      0,
+			Serial:  serial,
+			DueTime: dueTime,
+		}).Error
+	} else if db.Error != nil {
+		// 修改
+		log.Println(serial, dueTime, "2")
+		return db.Error
+	}
+
+	return D.Model(License{}).Where(License{Serial: serial}).Updates(License{DueTime: dueTime}).Error
 }
 
 func checkLicense(c *gin.Context) {
@@ -102,10 +146,37 @@ func checkLicense(c *gin.Context) {
 		return
 	}
 
+	var lic License
+	db := D.Model(License{}).Where(License{Serial: jDataS.Serial}).Take(&lic)
+	if errors.Is(db.Error, gorm.ErrRecordNotFound) {
+		c.Data(http.StatusOK, "text/plain", GetEnc(stru.ConnData{
+			Status:    -1,
+			StatusStr: "无效的 License, Serial: " + jDataS.Serial,
+		}))
+		return
+	}
+
+	if time.Now().Unix() >= lic.DueTime {
+		c.Data(http.StatusOK, "text/plain", GetEnc(stru.ConnData{
+			Status:    -2,
+			StatusStr: "License 已过期, Serial: " + jDataS.Serial,
+		}))
+		return
+	}
+
+	// 构造 响应
+	dueTime := time.Unix(lic.DueTime, 0)
+
+	c.Data(http.StatusOK, "text/plain", GetEnc(stru.ConnData{
+		Status:    -1,
+		StatusStr: "有效的License, 有效期至: " + dueTime.Format("2006-01-02"),
+	}))
+	return
+
 	// 构造 响应
 	c.Data(http.StatusOK, "text/plain", GetEnc(stru.ConnData{
 		Status:    0,
-		StatusStr: "有效的License",
+		StatusStr: "有效的License, 有效期至: " + dueTime.Format("2006-01-02"),
 	}))
 	return
 }

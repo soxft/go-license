@@ -29,6 +29,7 @@ func Run(maxRetries int, interval time.Duration, _licenseServer string, _publicK
 	licenseServer = _licenseServer
 	PublicKey = _publicKey
 
+	log.Printf("[Lincense] 检查 License ...")
 	result, err := RunCheck()
 	if err != nil {
 		log.Printf("[LICENSE] license 服务启动失败: %s", err.Error())
@@ -37,6 +38,8 @@ func Run(maxRetries int, interval time.Duration, _licenseServer string, _publicK
 		log.Printf("[LICENSE] license 无效: %s", result.StatusStr)
 		os.Exit(1)
 	}
+
+	log.Printf("[LICENSE] license 有效: %s", result.StatusStr)
 
 	go runLicenseClient(maxRetries, interval)
 }
