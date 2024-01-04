@@ -6,7 +6,7 @@ require (
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-resty/resty/v2 v2.11.0
 	github.com/imroc/biu v0.0.0-20170329141542-0376ce6761c0
-	github.com/soxft/go-machine-code v0.0.0-20240103154945-1ab849533250
+	github.com/soxft/go-machine-code v1.0.2
 	github.com/wenzhenxi/gorsa v0.0.0-20230530123828-0320cce15d81
 	gorm.io/gorm v1.25.5
 )

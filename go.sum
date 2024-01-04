@@ -60,6 +60,8 @@ github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZb
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/soxft/go-machine-code v0.0.0-20240103154945-1ab849533250 h1:WV4XlWzrdaPxCGA8OQ3lMlIXxEXpfldWUWyU04WwC1s=
 github.com/soxft/go-machine-code v0.0.0-20240103154945-1ab849533250/go.mod h1:2n1+W6xUX4pdBsJhtqTi0ZSWeMVm8znaYu0L8CFBIJU=
+github.com/soxft/go-machine-code v1.0.2 h1:lAutkFaZH5XUK2yoc0nu+QmAm9G9C8E87VJMEc/5JDw=
+github.com/soxft/go-machine-code v1.0.2/go.mod h1:2n1+W6xUX4pdBsJhtqTi0ZSWeMVm8znaYu0L8CFBIJU=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/objx v0.4.0/go.mod h1:YvHI0jy2hoMjB+UWwv71VJQ9isScKT/TqJzVSSt89Yw=
 github.com/stretchr/objx v0.5.0/go.mod h1:Yh+to48EsGEfYuaHDzXPcE3xhTkx73EhmCGUpEOglKo=

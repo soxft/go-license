@@ -153,32 +153,30 @@ func checkLicense(c *gin.Context) {
 	if errors.Is(db.Error, gorm.ErrRecordNotFound) {
 		c.Data(http.StatusOK, "text/plain", GetEnc(stru.ConnData{
 			Status:    -1,
-			StatusStr: "无效的 License, Serial: " + jDataS.Serial,
+			StatusStr: fmt.Sprintf("无效的 License, 本机序列号: %s", jDataS.Serial),
 		}))
+
+		log.Printf("[License] license invalid, serial: %s", jDataS.Serial)
 		return
 	}
 
 	if time.Now().Unix() >= lic.DueTime {
 		c.Data(http.StatusOK, "text/plain", GetEnc(stru.ConnData{
 			Status:    -2,
-			StatusStr: "License 已过期, Serial: " + jDataS.Serial,
+			StatusStr: fmt.Sprintf("License 已过期, 本机序列号: %s", jDataS.Serial),
 		}))
+
+		log.Printf("[License] license expired, serial: %s", jDataS.Serial)
 		return
 	}
 
 	// 构造 响应
 	dueTime := time.Unix(lic.DueTime, 0)
 
-	c.Data(http.StatusOK, "text/plain", GetEnc(stru.ConnData{
-		Status:    -1,
-		StatusStr: "有效的License, 有效期至: " + dueTime.Format("2006-01-02"),
-	}))
-	return
-
 	// 构造 响应
 	c.Data(http.StatusOK, "text/plain", GetEnc(stru.ConnData{
 		Status:    0,
-		StatusStr: "有效的License, 有效期至: " + dueTime.Format("2006-01-02"),
+		StatusStr: fmt.Sprintf("有效的License, 有效期至: %s", dueTime.Format("2006-01-02 15:04:05")),
 	}))
 	return
 }
